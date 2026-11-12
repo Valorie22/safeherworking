@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SafeHer Architecture</title>
+<style>
+  :root {
+    --bg: #140A18;  --bg-deep: #0C050F; --surface: #1E1023; --surface-alt: #2A1730;
+    --border: #3D2145;
+    --text: #FBEFF6; --muted: #C9AAC6; --faint: #8C6E8E;
+    --rose: #FF4D8D; --lilac: #C08CF5; --amber: #FFB020; --mint: #3DDC97; --sky: #5BC8FF;
+    --critical: #FF3B5C; --grey: #6B5A70;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    background-image: radial-gradient(90rem 45rem at -10% -15%, rgba(255,77,141,.07), transparent 60%);
+  }
+
+  header {
+    padding: 34px 40px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  h1 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -.5px; }
+  h1 span { color: var(--rose); }
+  .sub { color: var(--muted); margin-top: 6px; font-size: 14px; max-width: 70ch; line-height: 1.5; }
+
+  nav { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+  nav a {
+    font-size: 12px; font-weight: 600; text-decoration: none;
+    color: var(--muted); border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 999px;
+  }
+  nav a:hover { color: var(--rose); border-color: var(--rose); }
+
+  section { padding: 34px 40px 10px; }
+  h2 {
+    font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--faint); margin: 0 0 4px;
+  }
+  h3 { font-size: 22px; margin: 0 0 6px; font-weight: 700; }
+  .note { color: var(--muted); font-size: 13px; max-width: 95ch; line-height: 1.55; margin-bottom: 16px; }
+
+  .frame {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    overflow-x: auto;
+  }
+  svg { display: block; width: 100%; height: auto; min-width: 900px; }
+
+  /* --- shared SVG vocabulary --- */
+  .box       { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+  .box-rose  { fill: rgba(255,77,141,.10); stroke: var(--rose);  stroke-width: 1.8; }
+  .box-lilac { fill: rgba(192,140,245,.10); stroke: var(--lilac); stroke-width: 1.8; }
+  .box-amber { fill: rgba(255,176,32,.10); stroke: var(--amber); stroke-width: 1.8; }
+  .box-mint  { fill: rgba(61,220,151,.10); stroke: var(--mint);  stroke-width: 1.8; }
+  .box-sky   { fill: rgba(91,200,255,.10); stroke: var(--sky);   stroke-width: 1.8; }
+
+  .t       { fill: var(--text);  font-size: 13px; font-weight: 600; }
+  .t-title { fill: var(--text);  font-size: 15px; font-weight: 800; }
+  .t-mut   { fill: var(--muted); font-size: 11px; }
+  .t-faint { fill: var(--faint); font-size: 10px; }
+  .t-mono  { font-family: "JetBrains Mono", Consolas, monospace; font-size: 10.5px; }
+
+  .ln       { stroke: var(--border); stroke-width: 1.4; fill: none; }
+  .ln-rose  { stroke: var(--rose);  stroke-width: 1.8; fill: none; }
+  .ln-lilac { stroke: var(--lilac); stroke-width: 1.8; fill: none; }
+  .ln-amber { stroke: var(--amber); stroke-width: 1.8; fill: none; }
+  .ln-mint  { stroke: var(--mint);  stroke-width: 1.8; fill: none; }
+  .ln-sky   { stroke: var(--sky);   stroke-width: 1.8; fill: none; }
+  .dash     { stroke-dasharray: 5 4; }
+
+  .lane { fill: rgba(255,255,255,.018); stroke: var(--border); stroke-width: 1; }
+  .trust { fill: none; stroke: var(--critical); stroke-width: 1.6; stroke-dasharray: 7 5; }
+
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 12px; font-size: 11px; color: var(--muted); }
+  .legend i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+  footer { padding: 30px 40px 60px; color: var(--faint); font-size: 12px; border-top: 1px solid var(--border); margin-top: 30px; }
+
+  /* ----- A3 print, light ----- */
+  @media print {
+    @page { size: A3 landscape; margin: 10mm; }
+    :root {
+      --bg: #fff; --bg-deep: #fff; --surface: #fff; --surface-alt: #f4f4f6;
+      --border: #999; --text: #000; --muted: #333; --faint: #555;
+      --rose: #C2185B; --lilac: #6A3CB5; --amber: #A66A00; --mint: #0B7A4F;
+      --sky: #0B6E9E; --critical: #B00020; --grey: #666;
+    }
+    body { background: #fff; background-image: none; }
+    nav, footer { display: none; }
+    section { page-break-after: always; padding: 0 0 10px; }
+    section:last-of-type { page-break-after: auto; }
+    header { border-bottom: 1px solid #999; padding: 0 0 12px; }
+    .frame { border: none; padding: 0; overflow: visible; }
+    svg { min-width: 0; }
+    .box { fill: #fff; }
+    .box-rose, .box-lilac, .box-amber, .box-mint, .box-sky { fill: #fff; }
+    .lane { fill: #fafafa; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Safe<span>Her</span> — architecture</h1>
+  <p class="sub">
+    Four surfaces over one Supabase project. Every box below is a real table, function or
+    channel name from the codebase — nothing here is illustrative. Diagram 2 is the one to
+    read first: it is the mechanism, end to end, with the elapsed time down the side.
+  </p>
+  <nav>
+    <a href="#d1">1 · Ecosystem</a>
+    <a href="#d2">2 · SOS sequence</a>
+    <a href="#d3">3 · Data model</a>
+    <a href="#d4">4 · Routing &amp; escalation</a>
+  </nav>
+</header>
+
+<!-- ================= DIAGRAM 1 ================= -->
+<section id="d1">
+  <h2>Diagram 1</h2>
+  <h3>Ecosystem map</h3>
+  <p class="note">
+    One Supabase project serves all four clients; there is no server to deploy. Each arrow is
+    labelled with what actually travels on it. The dashed red boundary marks where citizen
+    medical data lives and who may cross it — guardians reach it only through a view, and only
+    while an incident is live.
+  </p>
+
+  <div class="frame">
+  <svg viewBox="0 0 1400 760" role="img" aria-label="SafeHer ecosystem map">
+    <defs>
+      <marker id="a-rose" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#FF4D8D"/></marker>
+      <marker id="a-lilac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#C08CF5"/></marker>
+      <marker id="a-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#FFB020"/></marker>
+      <marker id="a-sky" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#5BC8FF"/></marker>
+      <marker id="a-mint" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#3DDC97"/></marker>
+    </defs>
+
+    <!-- trust boundary -->
+    <rect class="trust" x="430" y="120" width="540" height="520" rx="22"/>
+    <text class="t-faint" x="700" y="112" text-anchor="middle" fill="#FF3B5C">
+      TRUST BOUNDARY — citizen identity + medical record. Crossing it requires an RLS policy in 0003_rls.sql.
+    </text>
+
+    <!-- core -->
+    <rect class="box-lilac" x="500" y="270" width="400" height="220" rx="16"/>
+    <text class="t-title" x="700" y="302" text-anchor="middle">Supabase</text>
+    <text class="t-mut"   x="700" y="322" text-anchor="middle">Postgres + PostGIS · Realtime · Auth · Storage · RLS</text>
+
+    <rect class="box" x="522" y="338" width="170" height="30" rx="7"/>
+    <text class="t-mono t" x="607" y="358" text-anchor="middle">raise_sos()</text>
+    <rect class="box" x="708" y="338" width="170" height="30" rx="7"/>
+    <text class="t-mono t" x="793" y="358" text-anchor="middle">nearest_stations()</text>
+
+    <rect class="box" x="522" y="376" width="170" height="30" rx="7"/>
+    <text class="t-mono t" x="607" y="396" text-anchor="middle">incidents</text>
+    <rect class="box" x="708" y="376" width="170" height="30" rx="7"/>
+    <text class="t-mono t" x="793" y="396" text-anchor="middle">nearest_hospitals()</text>
+
+    <rect class="box" x="522" y="414" width="356" height="30" rx="7"/>
+    <text class="t-mono t" x="700" y="434" text-anchor="middle">incident_events — append-only audit log</text>
+
+    <rect class="box" x="522" y="452" width="356" height="26" rx="7"/>
+    <text class="t-mono t-mut" x="700" y="470" text-anchor="middle">Storage: incident-media (private) · avatars (public read)</text>
+
+    <!-- 1. citizen -->
+    <rect class="box-rose" x="70" y="180" width="300" height="130" rx="14"/>
+    <text class="t-title" x="90" y="210">SafeHer</text>
+    <text class="t-mut"   x="90" y="230">React Native · Expo — the citizen</text>
+    <text class="t-faint" x="90" y="252">Safety SOS · Medical SOS · journey</text>
+    <text class="t-faint" x="90" y="268">rolling 60s audio buffer · shadow mode</text>
+    <text class="t-faint" x="90" y="284">shake + acoustic triggers · offline queue</text>
+
+    <path class="ln-rose" marker-end="url(#a-rose)" d="M370 232 C 440 232, 450 300, 500 322"/>
+    <text class="t-mono t-mut" x="392" y="222">raise_sos()</text>
+    <text class="t-faint" x="392" y="236">the ONLY way an incident is created</text>
+
+    <path class="ln-rose dash" marker-end="url(#a-rose)" d="M370 278 C 450 300, 450 380, 500 396"/>
+    <text class="t-mono t-mut" x="376" y="322">incident_locations · incident_media</text>
+    <text class="t-faint" x="376" y="336">breadcrumb 5s · audio 20s · snapshot 15s</text>
+
+    <!-- 2. guardian -->
+    <rect class="box-lilac" x="70" y="430" width="300" height="120" rx="14"/>
+    <text class="t-title" x="90" y="460">SafeHer Circle</text>
+    <text class="t-mut"   x="90" y="480">React Native · Expo — the guardian</text>
+    <text class="t-faint" x="90" y="502">alert takeover · live trail · PTT</text>
+    <text class="t-faint" x="90" y="518">guardian.context → the officer's panel</text>
+    <text class="t-faint" x="90" y="534">reads ward_profiles — no medical columns</text>
+
+    <path class="ln-lilac" marker-end="url(#a-lilac)" d="M500 452 C 450 470, 430 470, 370 470"/>
+    <text class="t-mono t-mut" x="378" y="444">user:{user_id} · incident:{id}</text>
+
+    <path class="ln-lilac dash" marker-end="url(#a-lilac)" d="M370 516 C 440 530, 460 500, 500 478"/>
+    <text class="t-mono t-mut" x="376" y="546">guardian.acknowledged · guardian.context</text>
+
+    <!-- 3. command -->
+    <rect class="box-sky" x="1030" y="180" width="300" height="140" rx="14"/>
+    <text class="t-title" x="1050" y="210">SafeHer Command</text>
+    <text class="t-mut"   x="1050" y="230">Vite + React — police control room</text>
+    <text class="t-faint" x="1050" y="252">incident wall · MapLibre + OSM rasters</text>
+    <text class="t-faint" x="1050" y="268">routing panel with runners-up</text>
+    <text class="t-faint" x="1050" y="284">live feed · comms · timeline</text>
+    <text class="t-faint" x="1050" y="300">NO phone number anywhere</text>
+
+    <path class="ln-sky" marker-end="url(#a-sky)" d="M900 320 C 960 300, 970 250, 1030 240"/>
+    <text class="t-mono t-mut" x="908" y="288">station:{station_id}</text>
+    <text class="t-faint" x="908" y="302">command:all for a supervisor</text>
+
+    <path class="ln-sky dash" marker-end="url(#a-sky)" d="M1030 296 C 960 330, 950 350, 900 360"/>
+    <text class="t-mono t-mut" x="908" y="346">status · assignment · comm.ptt</text>
+
+    <!-- 4. med -->
+    <rect class="box-amber" x="1030" y="430" width="300" height="130" rx="14"/>
+    <text class="t-title" x="1050" y="460">SafeHer Med</text>
+    <text class="t-mut"   x="1050" y="480">same app, /med route — medical room</text>
+    <text class="t-faint" x="1050" y="502">blood group first and largest</text>
+    <text class="t-faint" x="1050" y="518">ambulance assign · handover card</text>
+    <text class="t-faint" x="1050" y="534">cross-dispatch to police, both ways</text>
+
+    <path class="ln-amber" marker-end="url(#a-amber)" d="M900 440 C 960 450, 970 480, 1030 486"/>
+    <text class="t-mono t-mut" x="908" y="432">medical:{hospital_id}</text>
+    <text class="t-faint" x="908" y="446">type='medical' only</text>
+
+    <path class="ln-amber dash" marker-end="url(#a-amber)" d="M1030 540 C 960 560, 930 520, 900 470"/>
+    <text class="t-mono t-mut" x="900" y="566">request_cross_dispatch()</text>
+
+    <!-- simulator -->
+    <rect class="box-mint" x="560" y="620" width="280" height="86" rx="14"/>
+    <text class="t-title" x="580" y="648">scripts/simulate-sos.ts</text>
+    <text class="t-faint" x="580" y="668">signs in as a real seeded citizen and</text>
+    <text class="t-faint" x="580" y="684">calls raise_sos() exactly as a phone does</text>
+    <path class="ln-mint dash" marker-end="url(#a-mint)" d="M700 620 L 700 492"/>
+
+    <!-- shared package -->
+    <rect class="box" x="70" y="620" width="300" height="86" rx="14"/>
+    <text class="t-title" x="90" y="648">packages/shared</text>
+    <text class="t-faint" x="90" y="668">CHANNELS · EVENTS · TABLES · types</text>
+    <text class="t-faint" x="90" y="684">imported by all four — prevents drift</text>
+    <path class="ln dash" d="M220 620 L 220 550"/>
+    <path class="ln dash" d="M220 310 L 220 620"/>
+  </svg>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:#FF4D8D"></i>citizen path</span>
+    <span><i style="background:#C08CF5"></i>guardian path</span>
+    <span><i style="background:#5BC8FF"></i>police path</span>
+    <span><i style="background:#FFB020"></i>medical path</span>
+    <span><i style="background:#3DDC97"></i>test harness</span>
+    <span>— solid = writes · dashed = subscriptions / return paths</span>
+  </div>
+</section>
+
+<!-- ================= DIAGRAM 2 ================= -->
+<section id="d2">
+  <h2>Diagram 2 — read this one first</h2>
+  <h3>SOS sequence: press to flash, under two seconds</h3>
+  <p class="note">
+    The whole mechanism on one page. Time runs down the left. The fan-out at t+0.9s is the
+    critical moment: one realtime publication reaches three subscribers simultaneously — nobody
+    polls, and nobody touches the laptop.
+  </p>
+
+  <div class="frame">
+  <svg viewBox="0 0 1400 1080" role="img" aria-label="SOS sequence diagram">
+    <defs>
+      <marker id="s-rose" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#FF4D8D"/></marker>
+      <marker id="s-lilac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#C08CF5"/></marker>
+      <marker id="s-sky" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#5BC8FF"/></marker>
+      <marker id="s-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#FFB020"/></marker>
+      <marker id="s-mint" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#3DDC97"/></marker>
+    </defs>
+
+    <!-- lanes -->
+    <rect class="lane" x="150"  y="60" width="210" height="990" rx="10"/>
+    <rect class="lane" x="384"  y="60" width="250" height="990" rx="10"/>
+    <rect class="lane" x="658"  y="60" width="210" height="990" rx="10"/>
+    <rect class="lane" x="892"  y="60" width="210" height="990" rx="10"/>
+    <rect class="lane" x="1126" y="60" width="210" height="990" rx="10"/>
+
+    <text class="t-title" x="255"  y="86" text-anchor="middle" fill="#FF4D8D">Citizen app</text>
+    <text class="t-title" x="509"  y="86" text-anchor="middle" fill="#C08CF5">Supabase</text>
+    <text class="t-title" x="763"  y="86" text-anchor="middle" fill="#5BC8FF">Command</text>
+    <text class="t-title" x="997"  y="86" text-anchor="middle" fill="#FFB020">Med</text>
+    <text class="t-title" x="1231" y="86" text-anchor="middle" fill="#C08CF5">Circle</text>
+
+    <!-- time gutter -->
+    <line class="ln" x1="112" y1="100" x2="112" y2="1040"/>
+    <g class="t-mono t-faint" text-anchor="end">
+      <text x="100" y="146">t+0.00s</text>
+      <text x="100" y="212">t+0.05s</text>
+      <text x="100" y="278">t+0.20s</text>
+      <text x="100" y="344">t+0.45s</text>
+      <text x="100" y="410">t+0.70s</text>
+      <text x="100" y="476">t+0.85s</text>
+      <text x="100" y="560">t+0.90s</text>
+      <text x="100" y="660">t+1.20s</text>
+      <text x="100" y="742">t+1.60s</text>
+      <text x="100" y="820">t+8s</text>
+      <text x="100" y="890">t+25s</text>
+      <text x="100" y="960">t+40s</text>
+      <text x="100" y="1020">t+3min</text>
+    </g>
+
+    <!-- lifelines -->
+    <g class="ln dash">
+      <line x1="255"  y1="100" x2="255"  y2="1040"/>
+      <line x1="509"  y1="100" x2="509"  y2="1040"/>
+      <line x1="763"  y1="100" x2="763"  y2="1040"/>
+      <line x1="997"  y1="100" x2="997"  y2="1040"/>
+      <line x1="1231" y1="100" x2="1231" y2="1040"/>
+    </g>
+
+    <!-- 1 press -->
+    <rect class="box-rose" x="170" y="124" width="170" height="34" rx="8"/>
+    <text class="t" x="255" y="146" text-anchor="middle">Hold 1.2s → countdown</text>
+
+    <!-- 1b seal -->
+    <rect class="box-lilac" x="170" y="190" width="170" height="34" rx="8"/>
+    <text class="t-mono t" x="255" y="211" text-anchor="middle">buffer.seal()</text>
+    <text class="t-faint" x="255" y="236" text-anchor="middle">60s of audio from BEFORE the press</text>
+
+    <!-- 2 rpc -->
+    <path class="ln-rose" marker-end="url(#s-rose)" d="M255 262 L 255 278 L 495 278"/>
+    <text class="t-mono t-mut" x="300" y="270">raise_sos(type, reason, lat, lng, accuracy)</text>
+
+    <!-- 3 snapshot -->
+    <rect class="box-lilac" x="396" y="322" width="226" height="34" rx="8"/>
+    <text class="t" x="509" y="344" text-anchor="middle">medical_snapshot frozen</text>
+    <text class="t-faint" x="509" y="370" text-anchor="middle">later profile edits never reach this incident</text>
+
+    <!-- 4 routing -->
+    <rect class="box-lilac" x="396" y="388" width="226" height="34" rx="8"/>
+    <text class="t-mono t" x="509" y="410" text-anchor="middle">nearest_stations() · PostGIS</text>
+    <text class="t-faint" x="509" y="436" text-anchor="middle">server-side. The dashboard receives the decision.</text>
+
+    <!-- 5 write -->
+    <rect class="box-lilac" x="396" y="454" width="226" height="34" rx="8"/>
+    <text class="t-mono t" x="509" y="476" text-anchor="middle">INSERT incidents + 3 events</text>
+    <text class="t-faint" x="509" y="500" text-anchor="middle">sos.created · sos.medical_snapshot · routing.resolved</text>
+
+    <!-- 6 FAN-OUT -->
+    <rect x="384" y="524" width="952" height="66" rx="10" fill="rgba(255,77,141,.10)" stroke="#FF4D8D" stroke-width="1.8"/>
+    <text class="t-title" x="398" y="548" fill="#FF4D8D">REALTIME FAN-OUT — one publication, three subscribers, simultaneously</text>
+    <path class="ln-sky"   marker-end="url(#s-sky)"   d="M622 566 L 757 566"/>
+    <path class="ln-amber" marker-end="url(#s-amber)" d="M622 578 C 780 600, 860 600, 991 578"/>
+    <path class="ln-lilac" marker-end="url(#s-lilac)" d="M622 572 C 800 620, 1050 620, 1225 578"/>
+    <text class="t-mono t-faint" x="640" y="562">station:{id}</text>
+    <text class="t-mono t-faint" x="860" y="596">medical:{id}</text>
+    <text class="t-mono t-faint" x="1020" y="614">user:{id}</text>
+
+    <!-- 7 reactions -->
+    <rect class="box-sky" x="678" y="630" width="170" height="52" rx="8"/>
+    <text class="t" x="763" y="652" text-anchor="middle">Card pulses + tone</text>
+    <text class="t-faint" x="763" y="670" text-anchor="middle">map flies to the pin</text>
+
+    <rect class="box-amber" x="912" y="630" width="170" height="52" rx="8"/>
+    <text class="t" x="997" y="652" text-anchor="middle">Medical only</text>
+    <text class="t-faint" x="997" y="670" text-anchor="middle">safety SOS never appears</text>
+
+    <rect class="box-lilac" x="1146" y="630" width="170" height="52" rx="8"/>
+    <text class="t" x="1231" y="652" text-anchor="middle">Screen takeover</text>
+    <text class="t-faint" x="1231" y="670" text-anchor="middle">sound + vibration</text>
+
+    <!-- TARGET -->
+    <rect x="150" y="700" width="1186" height="40" rx="10" fill="rgba(61,220,151,.12)" stroke="#3DDC97" stroke-width="1.8"/>
+    <text class="t-title" x="743" y="726" text-anchor="middle" fill="#3DDC97">
+      TARGET: under 2 seconds from press to flash — measured, not estimated
+    </text>
+
+    <!-- 8 return to phone -->
+    <path class="ln-rose" marker-start="url(#s-rose)" d="M270 760 L 495 760" marker-end="url(#s-rose)"/>
+    <text class="t-mono t-mut" x="300" y="754">returns the full incident row</text>
+    <rect class="box-rose" x="170" y="776" width="170" height="34" rx="8"/>
+    <text class="t-faint" x="255" y="798" text-anchor="middle">"PGIMER, 1.4 km"</text>
+
+    <!-- 9 ack -->
+    <path class="ln-sky" marker-end="url(#s-sky)" d="M757 826 L 523 826"/>
+    <text class="t-mono t-mut" x="560" y="818">sos.acknowledged (Enter)</text>
+    <path class="ln-lilac dash" marker-end="url(#s-lilac)" d="M495 838 C 400 860, 330 850, 270 840"/>
+    <path class="ln-lilac dash" marker-end="url(#s-lilac)" d="M523 838 C 800 880, 1100 880, 1225 846"/>
+    <text class="t-faint" x="560" y="856">status propagates to BOTH phones</text>
+
+    <!-- 10 PTT -->
+    <path class="ln-sky" marker-end="url(#s-sky)" d="M757 890 L 523 890"/>
+    <path class="ln-rose" marker-end="url(#s-rose)" d="M270 908 L 495 908"/>
+    <text class="t-mono t-mut" x="545" y="884">comm.ptt — officer speaks</text>
+    <text class="t-mono t-mut" x="300" y="902">comm.ptt — she answers</text>
+    <text class="t-faint" x="545" y="926">no phone number was dialled at any point</text>
+
+    <!-- 11 guardian context -->
+    <path class="ln-lilac" marker-end="url(#s-lilac)" d="M1225 956 L 523 956"/>
+    <text class="t-mono t-mut" x="700" y="948">guardian.context — "walking from the east metro gate"</text>
+    <path class="ln-lilac" marker-end="url(#s-lilac)" d="M523 968 L 757 968"/>
+    <text class="t-faint" x="700" y="984">lands in the officer's panel, highlighted as family, not victim</text>
+
+    <!-- 12 dispatch + resolve -->
+    <path class="ln-sky" marker-end="url(#s-sky)" d="M757 1014 L 523 1014"/>
+    <text class="t-mono t-mut" x="545" y="1008">sos.unit_dispatched → sos.resolved</text>
+    <text class="t-faint" x="545" y="1032">every step above is a row in incident_events, to the second</text>
+  </svg>
+  </div>
+</section>
+
+<!-- ================= DIAGRAM 3 ================= -->
+<section id="d3">
+  <h2>Diagram 3</h2>
+  <h3>Data model</h3>
+  <p class="note">
+    Grouped by concern. The two tables marked <strong>append-only</strong> are enforced as such
+    by triggers in <span class="t-mono">0001_schema.sql</span> — an UPDATE or DELETE on
+    <span class="t-mono">incident_events</span> raises an exception, so the timeline cannot be
+    rewritten after the fact by anyone, including a developer with a psql prompt.
+  </p>
+
+  <div class="frame">
+  <svg viewBox="0 0 1400 840" role="img" aria-label="SafeHer data model">
+    <!-- PEOPLE -->
+    <rect x="40" y="60" width="330" height="330" rx="14" fill="rgba(255,77,141,.05)" stroke="#FF4D8D" stroke-width="1.4" stroke-dasharray="6 4"/>
+    <text class="t-faint" x="56" y="82" fill="#FF4D8D">PEOPLE</text>
+
+    <rect class="box-rose" x="60" y="96" width="290" height="132" rx="10"/>
+    <text class="t-title" x="76" y="120">profiles</text>
+    <text class="t-mono t-mut" x="76" y="140">id (= auth.users.id)</text>
+    <text class="t-mono t-mut" x="76" y="156">full_name · phone · photo_url · address</text>
+    <text class="t-mono t-mut" x="76" y="172">blood_group · allergies[] · conditions[]</text>
+    <text class="t-mono t-mut" x="76" y="188">medications[] · emergency_note</text>
+    <text class="t-mono t-mut" x="76" y="204">organ_donor</text>
+    <text class="t-faint" x="76" y="220">the medical record that travels with every SOS</text>
+
+    <rect class="box-rose" x="60" y="246" width="290" height="126" rx="10"/>
+    <text class="t-title" x="76" y="270">guardians</text>
+    <text class="t-mono t-mut" x="76" y="290">user_id → profiles (the protected person)</text>
+    <text class="t-mono t-mut" x="76" y="306">linked_profile_id → profiles (the guardian)</text>
+    <text class="t-mono t-mut" x="76" y="322">tier 1–3 · invite_code · can_view_live</text>
+    <text class="t-mono t-mut" x="76" y="338">status: pending | active | revoked</text>
+    <text class="t-faint" x="76" y="358">a self-join: the guardian graph</text>
+
+    <!-- INFRASTRUCTURE -->
+    <rect x="40" y="420" width="330" height="390" rx="14" fill="rgba(91,200,255,.05)" stroke="#5BC8FF" stroke-width="1.4" stroke-dasharray="6 4"/>
+    <text class="t-faint" x="56" y="442" fill="#5BC8FF">RESPONDER INFRASTRUCTURE</text>
+
+    <rect class="box-sky" x="60" y="456" width="290" height="84" rx="10"/>
+    <text class="t-title" x="76" y="480">police_stations</text>
+    <text class="t-mono t-mut" x="76" y="500">lat · lng · geom geography(point,4326)</text>
+    <text class="t-mono t-mut" x="76" y="516">GENERATED · GiST index</text>
+    <text class="t-faint" x="76" y="532">code · district · jurisdiction_radius_m</text>
+
+    <rect class="box-mint" x="60" y="556" width="290" height="84" rx="10"/>
+    <text class="t-title" x="76" y="580">hospitals</text>
+    <text class="t-mono t-mut" x="76" y="600">lat · lng · geom · GiST index</text>
+    <text class="t-mono t-mut" x="76" y="616">has_trauma_unit · has_ambulance</text>
+    <text class="t-faint" x="76" y="632">beds_available</text>
+
+    <rect class="box" x="60" y="656" width="140" height="68" rx="10"/>
+    <text class="t-title" x="76" y="680">responders</text>
+    <text class="t-mono t-mut" x="76" y="698">role · badge_no</text>
+    <text class="t-faint" x="76" y="714">officers AND medics</text>
+
+    <rect class="box" x="210" y="656" width="140" height="68" rx="10"/>
+    <text class="t-title" x="226" y="680">units</text>
+    <text class="t-mono t-mut" x="226" y="698">callsign · kind</text>
+    <text class="t-faint" x="226" y="714">patrol / ambulance</text>
+
+    <rect class="box" x="60" y="740" width="290" height="52" rx="10"/>
+    <text class="t-title" x="76" y="762">journeys</text>
+    <text class="t-mono t-mut" x="76" y="780">next_checkin_at · state — dead-man's switch</text>
+
+    <!-- INCIDENT -->
+    <rect x="420" y="60" width="940" height="750" rx="14" fill="rgba(192,140,245,.05)" stroke="#C08CF5" stroke-width="1.4" stroke-dasharray="6 4"/>
+    <text class="t-faint" x="436" y="82" fill="#C08CF5">THE INCIDENT</text>
+
+    <rect class="box-lilac" x="500" y="100" width="380" height="240" rx="12"/>
+    <text class="t-title" x="520" y="126">incidents</text>
+    <text class="t-mono t-mut" x="520" y="148">public_ref  "SOS-A3F9C1"</text>
+    <text class="t-mono t-mut" x="520" y="164">user_id → profiles</text>
+    <text class="t-mono t-mut" x="520" y="180">type: safety | medical</text>
+    <text class="t-mono t-mut" x="520" y="196">trigger_reason · severity · silent</text>
+    <text class="t-mono t-mut" x="520" y="212">status: new → acknowledged → … → resolved</text>
+    <text class="t-mono t-mut" x="520" y="228">lat · lng · accuracy_m · geom</text>
+    <text class="t-mono t-mut" x="520" y="244">assigned_station_id → police_stations</text>
+    <text class="t-mono t-mut" x="520" y="260">assigned_hospital_id → hospitals</text>
+    <text class="t-mono t-mut" x="520" y="276">assigned_responder_id · assigned_unit_id</text>
+    <text class="t-mono t-mut" x="520" y="292">routing_distance_m</text>
+    <text class="t-mono" x="520" y="310" fill="#FFB020">medical_snapshot jsonb ← FROZEN at trigger</text>
+    <text class="t-faint" x="520" y="330">one table for both SOS types. The pipeline never forks.</text>
+
+    <!-- children -->
+    <rect class="box" x="450" y="392" width="210" height="92" rx="10"/>
+    <text class="t-title" x="466" y="416">incident_locations</text>
+    <text class="t-mono t-mut" x="466" y="436">lat · lng · accuracy_m</text>
+    <text class="t-mono t-mut" x="466" y="452">speed_mps · captured_at</text>
+    <text class="t-faint" x="466" y="472">the breadcrumb trail · every 5s</text>
+
+    <rect class="box" x="684" y="392" width="210" height="92" rx="10"/>
+    <text class="t-title" x="700" y="416">incident_media</text>
+    <text class="t-mono t-mut" x="700" y="436">kind · storage_path</text>
+    <text class="t-mono" x="700" y="452" fill="#C08CF5">before_trigger boolean</text>
+    <text class="t-faint" x="700" y="472">TRUE = sealed from the buffer</text>
+
+    <rect class="box" x="918" y="392" width="210" height="92" rx="10"/>
+    <text class="t-title" x="934" y="416">incident_messages</text>
+    <text class="t-mono t-mut" x="934" y="436">sender_role · body</text>
+    <text class="t-mono t-mut" x="934" y="452">audio_path (PTT)</text>
+    <text class="t-faint" x="934" y="472">in-ecosystem comms</text>
+
+    <rect x="450" y="520" width="678" height="112" rx="10" fill="rgba(255,176,32,.10)" stroke="#FFB020" stroke-width="2"/>
+    <text class="t-title" x="470" y="546" fill="#FFB020">incident_events — APPEND-ONLY</text>
+    <text class="t-mono t-mut" x="470" y="568">actor_type: system | citizen | guardian | responder · actor_id</text>
+    <text class="t-mono t-mut" x="470" y="586">kind: sos.created · routing.resolved · sos.acknowledged · guardian.context · comm.ptt …</text>
+    <text class="t-mono t-mut" x="470" y="604">message · payload jsonb · at timestamptz</text>
+    <text class="t-faint" x="470" y="624">UPDATE and DELETE raise an exception. The timeline is generated from this table, never hand-written.</text>
+
+    <!-- views -->
+    <rect class="box" x="450" y="664" width="330" height="88" rx="10"/>
+    <text class="t-title" x="466" y="688">ward_profiles (view)</text>
+    <text class="t-faint" x="466" y="708">identity only — medical columns are</text>
+    <text class="t-faint" x="466" y="724">not IN the view, so a guardian cannot</text>
+    <text class="t-faint" x="466" y="740">select one at all</text>
+
+    <rect class="box" x="800" y="664" width="328" height="88" rx="10"/>
+    <text class="t-title" x="816" y="688">guardian_incident_history (view)</text>
+    <text class="t-faint" x="816" y="708">past incidents, medical_snapshot</text>
+    <text class="t-faint" x="816" y="724">omitted. Live incidents come from the</text>
+    <text class="t-faint" x="816" y="740">table itself, gated to non-resolved rows</text>
+
+    <!-- relations -->
+    <g class="ln">
+      <path d="M350 160 C 420 160, 440 190, 500 200" marker-end="url(#a-rose)"/>
+      <path d="M690 340 L 690 392"/>
+      <path d="M560 340 L 560 392"/>
+      <path d="M1000 340 C 1000 360, 1020 370, 1020 392"/>
+      <path d="M690 484 L 690 520"/>
+      <path d="M350 498 C 420 480, 440 300, 500 250"/>
+      <path d="M350 596 C 420 590, 450 320, 500 268"/>
+    </g>
+    <text class="t-faint" x="360" y="470">assigned_station_id</text>
+    <text class="t-faint" x="360" y="568">assigned_hospital_id</text>
+  </svg>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:#FF4D8D"></i>people</span>
+    <span><i style="background:#5BC8FF"></i>police infrastructure</span>
+    <span><i style="background:#3DDC97"></i>medical infrastructure</span>
+    <span><i style="background:#C08CF5"></i>incident</span>
+    <span><i style="background:#FFB020"></i>append-only / frozen</span>
+  </div>
+</section>
+
+<!-- ================= DIAGRAM 4 ================= -->
+<section id="d4">
+  <h2>Diagram 4</h2>
+  <h3>Routing and escalation logic</h3>
+  <p class="note">
+    One pipeline, two branches, converging on resolution. Note that a medical SOS assigns a
+    station as well as a hospital — a medical emergency may still need police, and a road
+    accident always does. Cross-dispatch works in both directions.
+  </p>
+
+  <div class="frame">
+  <svg viewBox="0 0 1400 820" role="img" aria-label="Routing and escalation decision flow">
+    <defs>
+      <marker id="f-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#8C6E8E"/></marker>
+      <marker id="f-rose" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#FF4D8D"/></marker>
+      <marker id="f-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#FFB020"/></marker>
+      <marker id="f-mint" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#3DDC97"/></marker>
+    </defs>
+
+    <!-- trigger sources -->
+    <rect class="box" x="40" y="60" width="230" height="130" rx="12"/>
+    <text class="t-title" x="56" y="84">Trigger sources</text>
+    <text class="t-mono t-mut" x="56" y="106">manual · shake · acoustic</text>
+    <text class="t-mono t-mut" x="56" y="124">duress (silent=true)</text>
+    <text class="t-mono t-mut" x="56" y="142">journey (missed check-in)</text>
+    <text class="t-mono t-mut" x="56" y="160">medical_manual · fall</text>
+    <text class="t-faint" x="56" y="180">all funnel into one entry point</text>
+
+    <path class="ln" marker-end="url(#f-arrow)" d="M270 124 L 350 124"/>
+
+    <rect class="box-lilac" x="352" y="96" width="220" height="56" rx="12"/>
+    <text class="t-mono t-title" x="462" y="120" text-anchor="middle">raise_sos()</text>
+    <text class="t-faint" x="462" y="140" text-anchor="middle">SECURITY DEFINER · one transaction</text>
+
+    <!-- location check -->
+    <path class="ln" marker-end="url(#f-arrow)" d="M462 152 L 462 196"/>
+    <path d="M462 198 L 600 246 L 462 294 L 324 246 Z" fill="rgba(255,176,32,.10)" stroke="#FFB020" stroke-width="1.6"/>
+    <text class="t" x="462" y="242" text-anchor="middle">GPS fix?</text>
+    <text class="t-faint" x="462" y="260" text-anchor="middle">waited 1.5s max</text>
+
+    <path class="ln-amber dash" marker-end="url(#f-amber)" d="M324 246 L 200 246"/>
+    <rect class="box-amber" x="40" y="218" width="158" height="58" rx="10"/>
+    <text class="t" x="119" y="240" text-anchor="middle">Raise anyway</text>
+    <text class="t-faint" x="119" y="258" text-anchor="middle">last known, marked stale</text>
+    <text class="t-faint" x="119" y="292" text-anchor="middle">degrade, never dead-end</text>
+
+    <!-- freeze -->
+    <path class="ln" marker-end="url(#f-arrow)" d="M462 294 L 462 326"/>
+    <rect class="box-lilac" x="332" y="328" width="260" height="46" rx="10"/>
+    <text class="t" x="462" y="356" text-anchor="middle">Freeze medical_snapshot</text>
+
+    <!-- type decision -->
+    <path class="ln" marker-end="url(#f-arrow)" d="M462 374 L 462 406"/>
+    <path d="M462 408 L 610 456 L 462 504 L 314 456 Z" fill="rgba(192,140,245,.12)" stroke="#C08CF5" stroke-width="1.8"/>
+    <text class="t-title" x="462" y="452" text-anchor="middle">type?</text>
+    <text class="t-faint" x="462" y="470" text-anchor="middle">the ONLY fork</text>
+
+    <!-- safety branch -->
+    <path class="ln-rose" marker-end="url(#f-rose)" d="M314 456 C 240 456, 200 456, 200 400 L 200 366"/>
+    <text class="t-mono" x="212" y="430" fill="#FF4D8D">safety</text>
+
+    <rect class="box-rose" x="40" y="560" width="300" height="212" rx="12"/>
+    <text class="t-title" x="58" y="586" fill="#FF4D8D">Safety branch</text>
+    <text class="t-mono t-mut" x="58" y="608">nearest_stations(lat, lng, 3)</text>
+    <text class="t-faint" x="58" y="626">top 3 written to routing.resolved payload</text>
+    <text class="t-mut" x="58" y="650">→ assigned_station_id = #1</text>
+    <text class="t-mut" x="58" y="668">→ publish on station:{station_id}</text>
+    <text class="t-mut" x="58" y="686">→ tiered guardian escalation (1 → 2 → 3)</text>
+    <text class="t-mut" x="58" y="704">→ supervisor may reassign, with a reason</text>
+    <text class="t-faint" x="58" y="726">runners-up are kept so the choice is auditable</text>
+    <text class="t-faint" x="58" y="748">appears in Command only — never in /med</text>
+
+    <path class="ln-rose" d="M200 504 L 200 560" marker-end="url(#f-rose)"/>
+    <path class="ln-rose" d="M314 470 C 250 500, 200 500, 200 504"/>
+
+    <!-- medical branch -->
+    <path class="ln-amber" marker-end="url(#f-amber)" d="M610 470 C 700 500, 760 520, 800 556"/>
+    <text class="t-mono" x="646" y="490" fill="#FFB020">medical</text>
+
+    <rect class="box-amber" x="760" y="560" width="320" height="212" rx="12"/>
+    <text class="t-title" x="778" y="586" fill="#FFB020">Medical branch</text>
+    <text class="t-mono t-mut" x="778" y="608">nearest_hospitals(lat, lng, 3)</text>
+    <text class="t-faint" x="778" y="626">trauma flag + beds_available shown</text>
+    <text class="t-mut" x="778" y="650">→ assigned_hospital_id = #1</text>
+    <text class="t-mono" x="778" y="668" fill="#FF4D8D">→ AND nearest_stations() → station too</text>
+    <text class="t-mut" x="778" y="686">→ publish on medical:{hospital_id}</text>
+    <text class="t-mut" x="778" y="704">→ ambulance assigned by distance</text>
+    <text class="t-mut" x="778" y="722">→ pre-arrival handover card</text>
+    <text class="t-faint" x="778" y="748">appears in /med only — never in Command</text>
+
+    <!-- cross dispatch -->
+    <path class="ln-mint" marker-end="url(#f-mint)" d="M340 640 L 756 640"/>
+    <path class="ln-mint" marker-end="url(#f-mint)" d="M756 664 L 344 664"/>
+    <rect x="400" y="600" width="300" height="34" rx="8" fill="rgba(61,220,151,.12)" stroke="#3DDC97" stroke-width="1.6"/>
+    <text class="t-mono t" x="550" y="622" text-anchor="middle" fill="#3DDC97">request_cross_dispatch()</text>
+    <text class="t-faint" x="550" y="690" text-anchor="middle">both directions. A road accident needs police AND an ambulance.</text>
+
+    <!-- no-ack escalation -->
+    <rect class="box" x="1120" y="96" width="240" height="140" rx="12"/>
+    <text class="t-title" x="1138" y="120">No acknowledgement</text>
+    <text class="t-faint" x="1138" y="142">status stays 'new'</text>
+    <text class="t-mut" x="1138" y="164">→ card keeps pulsing</text>
+    <text class="t-mut" x="1138" y="182">→ counter turns rose, blinks</text>
+    <text class="t-mut" x="1138" y="200">→ guardians escalate tier 1 → 2 → 3</text>
+    <text class="t-faint" x="1138" y="222">nothing is ever silently dropped</text>
+    <path class="ln dash" marker-end="url(#f-arrow)" d="M610 440 C 800 380, 1000 260, 1118 180"/>
+
+    <!-- convergence -->
+    <path class="ln" marker-end="url(#f-arrow)" d="M190 772 C 190 800, 400 800, 560 792"/>
+    <path class="ln" marker-end="url(#f-arrow)" d="M920 772 C 920 800, 700 800, 580 792"/>
+    <rect class="box-mint" x="450" y="766" width="280" height="44" rx="10"/>
+    <text class="t-title" x="590" y="794" text-anchor="middle" fill="#3DDC97">
+      resolved · false_alarm
+    </text>
+    <text class="t-faint" x="1180" y="792" text-anchor="middle">both require a note, and both write incident_events</text>
+  </svg>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:#FF4D8D"></i>safety branch</span>
+    <span><i style="background:#FFB020"></i>medical branch</span>
+    <span><i style="background:#3DDC97"></i>cross-dispatch / resolution</span>
+    <span><i style="background:#C08CF5"></i>shared pipeline</span>
+  </div>
+</section>
+
+<footer>
+  SafeHer — emergency response ecosystem. Every box on these four diagrams names a real table,
+  function or channel. Print to A3 landscape for the light version.
+</footer>
+
+</body>
+</html>

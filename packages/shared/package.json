@@ -1,0 +1,17 @@
+{
+  "name": "@safeher/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Table names, channel names, event names, types and the SafeHer palette. Imported by all four surfaces so they cannot drift apart.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.47.10"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

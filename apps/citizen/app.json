@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "SafeHer",
+    "slug": "safeher-citizen",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#140A18",
+    "splash": { "backgroundColor": "#140A18", "resizeMode": "contain" },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.safeher.citizen",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "SafeHer sends your live location to responders during an emergency.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "SafeHer keeps sending your location while an emergency is open, even if the screen is off.",
+        "NSMicrophoneUsageDescription": "SafeHer records audio evidence from just before an alert is raised.",
+        "NSCameraUsageDescription": "SafeHer captures snapshots during an emergency so responders can see the scene.",
+        "UIBackgroundModes": ["location", "audio"]
+      }
+    },
+    "android": {
+      "package": "com.safeher.citizen",
+      "adaptiveIcon": { "backgroundColor": "#140A18" },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "RECORD_AUDIO",
+        "CAMERA",
+        "VIBRATE",
+        "FOREGROUND_SERVICE"
+      ]
+    },
+    "plugins": [
+      ["expo-location", { "isAndroidBackgroundLocationEnabled": true }],
+      "expo-camera",
+      "expo-av"
+    ]
+  }
+}

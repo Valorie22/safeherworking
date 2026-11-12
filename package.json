@@ -1,0 +1,33 @@
+{
+  "name": "safeher",
+  "private": true,
+  "version": "0.1.0",
+  "description": "SafeHer — emergency response ecosystem: citizen app, guardian app, police control room, medical control room.",
+  "workspaces": [
+    "packages/*",
+    "apps/command"
+  ],
+  "scripts": {
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:push": "supabase db push",
+    "sim": "tsx scripts/simulate-sos.ts",
+    "command": "npm run dev --workspace @safeher/command",
+    "citizen": "npm --prefix apps/citizen start",
+    "guardian": "npm --prefix apps/guardian start",
+    "typecheck": "tsc --noEmit -p packages/shared && npm run typecheck --workspace @safeher/command",
+    "test:rls": "tsx scripts/test-rls.ts",
+    "guardian:web": "npm --prefix apps/guardian run web",
+    "citizen:tunnel": "npm --prefix apps/citizen run tunnel",
+    "guardian:tunnel": "npm --prefix apps/guardian run tunnel"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.7",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

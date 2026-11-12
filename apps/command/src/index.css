@@ -1,0 +1,197 @@
+/*
+ * maplibre-gl.css MUST be imported before Tailwind.
+ *
+ * MapLibre ships `.maplibregl-map { position: relative }`, which has the
+ * same specificity as Tailwind's `.absolute`. Imported second it wins the
+ * cascade, the map container collapses to height:0, and the canvas falls
+ * back to the 300px HTML default — you get a map that is mounted,
+ * listening and completely invisible. Order matters here.
+ */
+@import 'maplibre-gl/dist/maplibre-gl.css';
+@import 'tailwindcss';
+
+/*
+ * SafeHer Command — the control-room surface.
+ *
+ * These tokens mirror packages/shared/src/theme.ts exactly. The palette
+ * is warm aubergine rather than the usual blue-slate because SafeHer is a
+ * women's safety product, but the warmth is carried by hue, not
+ * brightness: an operator watches this for eight hours, so contrast is
+ * high and nothing glows except what is genuinely urgent.
+ */
+@theme {
+  --color-sh-bg: #140a18;
+  --color-sh-bg-deep: #0c050f;
+  --color-sh-surface: #1e1023;
+  --color-sh-surface-alt: #2a1730;
+  --color-sh-surface-hi: #361e3e;
+  --color-sh-border: #3d2145;
+  --color-sh-border-soft: #2b1832;
+
+  --color-sh-text: #fbeff6;
+  --color-sh-muted: #c9aac6;
+  --color-sh-faint: #8c6e8e;
+
+  --color-sh-rose: #ff4d8d;
+  --color-sh-rose-deep: #d6246a;
+  --color-sh-rose-soft: #ffd6e7;
+
+  --color-sh-lilac: #c08cf5;
+  --color-sh-lilac-deep: #8b5cf6;
+  --color-sh-lilac-soft: #e9d9ff;
+
+  --color-sh-amber: #ffb020;
+  --color-sh-amber-soft: #ffe3a8;
+
+  --color-sh-mint: #3ddc97;
+  --color-sh-mint-soft: #b8f2d8;
+
+  --color-sh-sky: #5bc8ff;
+  --color-sh-sky-soft: #cceeff;
+
+  --color-sh-critical: #ff3b5c;
+  --color-sh-grey: #6b5a70;
+
+  --font-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--color-sh-bg);
+  color: var(--color-sh-text);
+  font-family: var(--font-sans);
+  overflow: hidden;
+  /* A very soft rose bloom from the top-left keeps the dark from going
+     flat without ever competing with an alert. */
+  background-image: radial-gradient(
+    120rem 60rem at -10% -20%,
+    rgba(255, 77, 141, 0.07),
+    transparent 60%
+  );
+}
+
+/* A ticking age counter must not jitter as digits change width. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+/*
+ * The new-incident pulse. This is the thing an operator has to notice
+ * from across the room, so it moves the whole card, not just a dot.
+ */
+@keyframes sh-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(255, 77, 141, 0),
+      inset 0 0 0 1px rgba(255, 77, 141, 0.55);
+    background-color: rgba(255, 77, 141, 0.07);
+  }
+  50% {
+    box-shadow:
+      0 0 0 10px rgba(255, 77, 141, 0),
+      0 0 34px rgba(255, 77, 141, 0.42),
+      inset 0 0 0 1px rgba(255, 77, 141, 1);
+    background-color: rgba(255, 77, 141, 0.17);
+  }
+}
+.pulse-new {
+  animation: sh-pulse 1.15s ease-in-out infinite;
+}
+
+@keyframes sh-pulse-amber {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(255, 176, 32, 0.55);
+    background-color: rgba(255, 176, 32, 0.07);
+  }
+  50% {
+    box-shadow:
+      0 0 34px rgba(255, 176, 32, 0.42),
+      inset 0 0 0 1px rgba(255, 176, 32, 1);
+    background-color: rgba(255, 176, 32, 0.17);
+  }
+}
+.pulse-new-medical {
+  animation: sh-pulse-amber 1.15s ease-in-out infinite;
+}
+
+@keyframes sh-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+.blink {
+  animation: sh-blink 1s step-end infinite;
+}
+
+/* Map pin pulse, drawn as a DOM marker so it survives style reloads. */
+@keyframes sh-ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+.map-ping {
+  animation: sh-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #3d2145;
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #5a3364;
+}
+
+/* MapLibre's default chrome is light; tone it into the palette. */
+.maplibregl-ctrl-attrib {
+  background: rgba(20, 10, 24, 0.82) !important;
+  color: #8c6e8e !important;
+  font-size: 10px !important;
+}
+.maplibregl-ctrl-attrib a {
+  color: #c9aac6 !important;
+}
+.maplibregl-canvas {
+  outline: none;
+}
+
+/* The OSM raster tiles are bright. Sit them back so the rose and amber
+   pins stay the loudest thing on the map. */
+.map-dark .maplibregl-canvas {
+  filter: brightness(0.62) saturate(0.55) hue-rotate(-14deg) contrast(1.06);
+}
+
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+}
+input:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--color-sh-rose);
+  outline-offset: 1px;
+}

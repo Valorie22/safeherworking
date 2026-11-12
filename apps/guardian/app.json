@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "SafeHer Circle",
+    "slug": "safeher-guardian",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#140A18",
+    "splash": {
+      "backgroundColor": "#140A18",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.safeher.circle",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "SafeHer Circle lets you speak to your ward and the control room during an emergency.",
+        "UIBackgroundModes": [
+          "audio"
+        ]
+      }
+    },
+    "android": {
+      "package": "com.safeher.circle",
+      "adaptiveIcon": {
+        "backgroundColor": "#140A18"
+      },
+      "permissions": [
+        "RECORD_AUDIO",
+        "VIBRATE"
+      ]
+    },
+    "plugins": [
+      "expo-av"
+    ],
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
