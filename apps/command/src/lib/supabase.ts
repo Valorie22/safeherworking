@@ -2,9 +2,31 @@ import { createClient } from '@safeher/shared';
 import type { Responder } from '@safeher/shared';
 import { useEffect, useState } from 'react';
 
+// Each browser tab keeps its own sign-in. Command (/) and Med (/med) are
+// served from the same origin, so with the default shared localStorage
+// session (and supabase-js's cross-tab BroadcastChannel) signing in as a
+// medic in one tab signed every tab in as that medic — and the role
+// redirect then sent the police tab to /med. sessionStorage is per tab and
+// survives reloads; the per-tab key gives each tab its own channel too.
+function tabStorageKey(): string {
+  const ID_KEY = 'safeher-tab-id';
+  let id = sessionStorage.getItem(ID_KEY);
+  if (!id) {
+    id = Math.random().toString(36).slice(2, 10);
+    sessionStorage.setItem(ID_KEY, id);
+  }
+  return `safeher-command-auth-${id}`;
+}
+
 export const supabase = createClient({
   url: import.meta.env.VITE_SUPABASE_URL as string,
   anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+  storage: {
+    getItem: async (k) => sessionStorage.getItem(k),
+    setItem: async (k, v) => sessionStorage.setItem(k, v),
+    removeItem: async (k) => sessionStorage.removeItem(k),
+  },
+  storageKey: tabStorageKey(),
 });
 
 /**

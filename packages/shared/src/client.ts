@@ -21,10 +21,15 @@ export interface CreateClientOptions {
   };
   /** React Native cannot detect a session in a URL — pass false there. */
   detectSessionInUrl?: boolean;
+  /**
+   * Overrides supabase-js's default storage key. It also names the
+   * cross-tab BroadcastChannel, so a unique key keeps sessions apart.
+   */
+  storageKey?: string;
 }
 
 export function createClient(opts: CreateClientOptions): SupabaseClient {
-  const { url, anonKey, storage, detectSessionInUrl = true } = opts;
+  const { url, anonKey, storage, detectSessionInUrl = true, storageKey } = opts;
 
   if (!url || !anonKey) {
     throw new Error(
@@ -47,6 +52,7 @@ export function createClient(opts: CreateClientOptions): SupabaseClient {
     },
     auth: {
       storage: storage as never,
+      ...(storageKey ? { storageKey } : {}),
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl,
