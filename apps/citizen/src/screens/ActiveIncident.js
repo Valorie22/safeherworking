@@ -8,7 +8,7 @@ import {
   View,
   Vibration,
 } from 'react-native';
-import { Audio } from 'expo-av';
+import { Audio } from '../lib/audio';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { supabase } from '../lib/supabase';
 import { COLORS, S, statusTone } from '../lib/ui';

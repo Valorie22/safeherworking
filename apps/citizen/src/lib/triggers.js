@@ -1,5 +1,5 @@
 import { Accelerometer } from 'expo-sensors';
-import { Audio } from 'expo-av';
+import { Audio } from './audio';
 
 /**
  * Hands-free triggers.

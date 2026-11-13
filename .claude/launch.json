@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--workspace", "@safeher/command"],
       "port": 5173
+    },
+    {
+      "name": "guardian-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "apps/guardian", "run", "web"],
+      "port": 8082
     }
   ]
 }

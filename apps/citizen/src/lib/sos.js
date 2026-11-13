@@ -1,6 +1,6 @@
 import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
-import { Audio } from 'expo-av';
+import { Audio } from './audio';
 import { supabase } from './supabase';
 import { mediaPath, RPC, TABLES } from '@safeher/shared';
 import { queueSos, flushQueue, smsFallback } from './offline';
@@ -28,8 +28,8 @@ import { queueSos, flushQueue, smsFallback } from './offline';
 // segments and recycle the oldest. On SOS we seal them and upload with
 // before_trigger = true.
 //
-// (The brief names expo-audio; that module lands in Expo SDK 52. On SDK
-// 51 the equivalent is expo-av's Audio.Recording, used here. The
+// (Recording goes through ./audio, a thin expo-av-compatible wrapper
+// around expo-audio, which replaced expo-av in Expo Go. The
 // behaviour is identical — only the import changes.)
 // ---------------------------------------------------------------------
 
